@@ -8,7 +8,7 @@ function App() {
   <div className="h-max">  
       <h1>
         <SearchBar />
-        <Appbar />
+        <Appbar  />
       </h1>
   </div>
     </>
