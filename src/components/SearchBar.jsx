@@ -151,7 +151,7 @@ const ChatApp = () => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
-      <div className="w-4/6 hover:bg-slate-200 shadow-md rounded-lg p-4">
+      <div className="w-4/6 bg-slate-100 shadow-md rounded-lg p-4">
       
         <div className="flex flex-col space-y-4 h-96  overflow-y-auto">
           {messages.map((msg, index) => (
