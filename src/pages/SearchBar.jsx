@@ -5,9 +5,8 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import Appbar from "./Appbar";
 import Navbar from "@/component/Navbar";
 import { useNavigate } from "react-router-dom";
-import Potential_disease from "./Potential_disease";
 
-const genAI = new GoogleGenerativeAI("AIzaSyDKHdp3MU7ontu94mRR0Jxd94QS849PzzU");
+const genAI = new GoogleGenerativeAI("AIzaSyAl73CKsaZeZqeFbUEXiu93i9P4CKy_g-0");
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 const SearchBar = ({ onSearch }) => {
@@ -175,9 +174,9 @@ const ChatApp = () => {
                     key={index}
                     className="flex justify-end" // Align user messages to the right
                   >
-                    <div className="max-w-xl p-2 rounded-lg text-black bg-green-600 text-left">
+                    <div className="max-w-xl p-2 text-xl rounded-lg font-semibold text-white bg-emerald-700 text-left">
                       <p>{msg.text}</p>
-                      <span className="text-xs text-blue-900">{timestamp}</span>
+                      <span className="text-xs  text-black font-base">{timestamp}</span>
                     </div>
                   </div>
                 );
@@ -191,7 +190,7 @@ const ChatApp = () => {
             {Object.keys(symptomResponses).map((symptom, index) => (
               <button
                 key={index}
-                className="p-2 mt-5 bg-blue-600 text-white rounded hover:translate-y-1 hover:shadow-xl hover:bg-blue-700"
+                className="p-2 mt-5 bg-green-200 text-]green-600 rounded hover:translate-y-1 hover:shadow-xl hover:text-white hover:bg-green-700"
                 onClick={() => setSymptomDetails(prevDetails => prevDetails === symptomResponses[symptom] ? "" : symptomResponses[symptom])} // Toggle details on click
               >
                 {symptom}
@@ -206,7 +205,7 @@ const ChatApp = () => {
               <h3 className="font-bold">Symptom Details:</h3>
               <p className="text-green-800">{symptomDetails}</p>
             </div>
-            <button onClick={potential} className="p-2 mt-4 bg-green-500 rounded">
+            <button onClick={potential} className="p-2 mt-4 bg-emerald-700 text-white rounded">
             Click to Find the Information about the potential Disease
         </button>
         </>)}
