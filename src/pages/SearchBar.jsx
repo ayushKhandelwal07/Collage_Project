@@ -1,35 +1,40 @@
 import { useState } from "react";
 import axios from "axios";
 import PropTypes from 'prop-types';
-
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import Appbar from "./Appbar";
 import Navbar from "@/component/Navbar";
-const genAI = new GoogleGenerativeAI("AIzaSyBCDbrnNZNDStjhSMhW4dqC57ySXlzvZTE");
+import { useNavigate } from "react-router-dom";
+import Potential_disease from "./Potential_disease";
+
+const genAI = new GoogleGenerativeAI("AIzaSyDKHdp3MU7ontu94mRR0Jxd94QS849PzzU");
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-
-// SearchBar Component
 const SearchBar = ({ onSearch }) => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [isRecording, setIsRecording] = useState(false); // State to track recording status
 
   const handleVoiceSearch = () => {
     const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-    recognition.lang = 'hi-IN'; // Set the language to Hindi
-    recognition.lang = 'gu-IN'; // Set the language to Gujarati
-    recognition.lang = 'en-US'; // Set the language to English // Taking user preference for language
+    recognition.lang = 'en-US'; // Set to default language (you can change as needed)
 
     recognition.onresult = (event) => {
       const speechResult = event.results[0][0].transcript;
-      setSearchTerm(speechResult);
+      setSearchTerm(speechResult); // Update search term with recognized speech
       onSearch(speechResult); // Pass recognized speech to the parent
     };
 
     recognition.onerror = (event) => {
       console.error("Speech recognition error:", event.error);
+      setIsRecording(false); // Stop recording on error
     };
 
-    recognition.start();
+    recognition.onend = () => {
+      setIsRecording(false); // Reset recording state when speech recognition ends
+    };
+
+    setIsRecording(true); // Start recording
+    recognition.start(); // Start speech recognition
   };
 
   const handleInputChange = (event) => {
@@ -45,10 +50,9 @@ const SearchBar = ({ onSearch }) => {
   SearchBar.propTypes = {
     onSearch: PropTypes.func.isRequired,
   };
-  
 
-  return ( // lower search bar logic
-    <div className="flex justify-start items-center bg-emerald-800 p-4 m-5 rounded-full absolute bottom-0 left-1/2 transform -translate-x-1/2">
+  return (
+    <div className="flex justify-start items-center  bg-emerald-800 p-4 m-5 rounded-full absolute bottom-0 left-1/2 transform -translate-x-1/2">
       <div className="flex mr-4 p-1 h-10">
         <input
           className="rounded-full w-60 p-2 focus:outline-none bg-emerald-800 text-slate-100"
@@ -59,10 +63,9 @@ const SearchBar = ({ onSearch }) => {
         />
       </div>
 
-
       <div className="flex pr-10"> 
         <button
-          className="bg-white p-1 rounded-full hover:bg-red-500 hover:text-white"
+          className={`p-1 rounded-full ${isRecording ? "bg-red-500" : "bg-white hover:bg-red-500 hover:text-white"}`} // Change button color based on recording status
           onClick={handleVoiceSearch}
         >
           <svg
@@ -96,94 +99,127 @@ const SearchBar = ({ onSearch }) => {
   );
 };
 
-
-// ChatApp Component
 const ChatApp = () => {
   const [messages, setMessages] = useState([]);
-   //gemini logic
+  const [symptomDetails, setSymptomDetails] = useState(""); // To store the Gemini response
+  const [symptomResponses, setSymptomResponses] = useState({}); // Store responses keyed by symptom
+  
+
+  const navigate = useNavigate();
+  const potential = () => {
+    navigate('/disease');
+  }
+
   const handleSearch = async (term) => {
-    // User message (appears on the right)
+    // User message
     const userMessage = { text: term, sender: "user" };
     setMessages((prevMessages) => [...prevMessages, userMessage]);
 
     try {
-      // Get diseases from the medical model API
-      const response_data = await axios.post("https://vinkas-en-biobert-model.hf.space/detect_symptoms", {
+      const response = await axios.post("https://vinkas-en-biobert-model.hf.space/detect_symptoms", {
         text: term
       });
-      console.log(response_data.data.detected_symptoms)
 
-      const data = response_data.data;
-      const diseases = data.potential_diseases;``
-      const probality = diseases.match(/-?\d+(\.\d+)?/g);
-    
-      console.log(diseases)
-      console.log(probality*100)
+      const symptomsArray = response.data.detected_symptoms;
+      const potentialDiseases = response.data.potential_diseases;
+      localStorage.setItem("potentialDiseases", JSON.stringify(potentialDiseases)); // Save potential diseases to local storage
+      console.log(localStorage.getItem("potentialDiseases"));
+      
+      // Logging detected symptoms
+      console.log("Detected Symptoms: ", symptomsArray);
 
-      // Create prompt for Gemini API
-      const prompt = `Disease: ${diseases}\n` +
-        `What are the common reasons for ${diseases}?\n` +
-        `What are the recommended treatments for ${diseases}?\n` +
-        `How dangerous is ${diseases}?\n  give answer of each of these question on new line with  tag Disease : , Reason : ,Cure : , Severity :dont give any unneccery things just four tags with datails`
+      // Storing detected symptoms
+      const detectedSymptoms = [...new Set(symptomsArray)];
 
-      // Get detailed information from the Gemini API
-      const geminiResponse = await model.generateContent(prompt);
-      // console.log(geminiResponse)
-      console.log(geminiResponse.response.text()); 
-      const geminiData = geminiResponse.response.text().replace(/#/g, "").replace(/\*/g, "");
+      // Example of creating a prompt for Gemini API for each symptom
+      const geminiPromises = detectedSymptoms.map(async (symptom) => {
+        const prompt = `What are the common reasons for ${symptom}? What are the recommended treatments for ${symptom}? How dangerous is ${symptom}? Please give a brief answer in 3-4 lines`;
+        const geminiResponse = await model.generateContent(prompt);
+        const geminiData = geminiResponse.response.text().replace(/#/g, "").replace(/\*/g, "");
+        return { symptom, details: geminiData };
+      });
 
-      // Mock bot message with detailed response (appears on the left)
-      const botMessage = {
-        text: geminiData, // Replace with actual response data
-        sender: "bot",
-      };
-      setMessages((prevMessages) => [...prevMessages, botMessage]);
+      // Wait for all Gemini responses
+      const responses = await Promise.all(geminiPromises);
+
+      // Collecting responses
+      const geminiResponses = {}; // Object to hold responses
+
+      responses.forEach(({ symptom, details }) => {
+        geminiResponses[symptom] = details; // Store each response keyed by symptom
+      });
+
+      setSymptomResponses(geminiResponses); // Update state
 
     } catch (error) {
       console.error("Error fetching data:", error);
-      const botMessage = {
-        text: "Sorry, something went wrong. Please try again.",
-        sender: "bot",
-      };
-      setMessages((prevMessages) => [...prevMessages, botMessage]);
+      // You may want to handle errors accordingly
     }
   };
-
 
   return (
     <div className="">
       <Appbar />
       <Navbar />
 
-      <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
-        <div className="w-5/6 h-4/5 bg-white-900 shadow-xl rounded-lg p-4">
-          <div className="flex flex-col space-y-4 h-96 overflow-y-auto">
+      <div className="flex items-center justify-center mt-28 max-h-screen p-4">
+        <div className="w-full bg-white-900 h-96  overflow-y-auto rounded-lg p-4">
+          <style>
+          </style>
+          <div className="flex flex-col space-y-4 ">
             {messages.map((msg, index) => {
-              const timestamp = new Date().toLocaleString(); // Get current date and time
-              return (
-                <div
-                  key={index}
-                  className={`flex ${
-                    msg.sender === "user" ? "justify-end" : "justify-start"
-                  }`}
-                >
+              if (msg.sender === "user") { // Only render user messages
+                const timestamp = new Date().toLocaleString(); // Get current date and time
+                return (
                   <div
-                    className={`max-w-xl p-2 rounded-lg text-black ${
-                      msg.sender === "user"
-                        ? "bg-blue-500 text-left"
-                        : "bg-blue-400 text-right text-black"
-                    }`}
+                    key={index}
+                    className="flex justify-end" // Align user messages to the right
                   >
-                    <p>{msg.text}</p>
-                    <span className="text-xs text-blue-900">{timestamp}</span>
+                    <div className="max-w-xl p-2 rounded-lg text-black bg-green-600 text-left">
+                      <p>{msg.text}</p>
+                      <span className="text-xs text-blue-900">{timestamp}</span>
+                    </div>
                   </div>
-                </div>
-              );
+                );
+              }
+              return null;
             })}
           </div>
-          <SearchBar onSearch={handleSearch} />
+
+          {/* Render Detected Symptoms as Clickable Buttons Below User Messages */}
+          <div className=" grid grid-cols-3 gap-2">
+            {Object.keys(symptomResponses).map((symptom, index) => (
+              <button
+                key={index}
+                className="p-2 mt-5 bg-blue-600 text-white rounded hover:translate-y-1 hover:shadow-xl hover:bg-blue-700"
+                onClick={() => setSymptomDetails(prevDetails => prevDetails === symptomResponses[symptom] ? "" : symptomResponses[symptom])} // Toggle details on click
+              >
+                {symptom}
+              </button>
+            ))}
+          </div>
+
+          {/* Display the symptom details when clicked */}
+          {symptomDetails && (
+            <>
+            <div className="mt-4 p-4 border rounded bg-green-50">
+              <h3 className="font-bold">Symptom Details:</h3>
+              <p className="text-green-800">{symptomDetails}</p>
+            </div>
+            <button onClick={potential} className="p-2 mt-4 bg-green-500 rounded">
+            Click to Find the Information about the potential Disease
+        </button>
+        </>)}
+
+          <SearchBar onSearch={(term) => {
+            handleSearch(term);
+            setSymptomResponses({}); // Clear symptom responses on search
+            setSymptomDetails(""); // Clear symptom details on search
+          }} />
+          
         </div>
       </div>
+
     </div>
   );
 };

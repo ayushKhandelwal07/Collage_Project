@@ -9,8 +9,8 @@ function Navbar() {
             navigate('/language')
       }
   return (
-  <div className='flex justify-center content-center bg-red-300'>
-                  <div className='flex justify-between content-center my-2 text-xl font-medium border fixed p-4 border-black rounded-full w-1/2  shadow-2xl'>
+  <div className='flex justify-center content-center'>
+                  <div className='flex justify-between content-center my-2 text-xl font-medium border fixed p-4 border-black rounded-full w-1/2'>
                         
                         <div  className='ml-5'>
                               <img  src={doc_img} height={50} width={50} alt="Doctor" />

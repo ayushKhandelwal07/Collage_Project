@@ -6,6 +6,7 @@ import SearchBar from './pages/SearchBar';
 // import Auth from './pages/Auth';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import Potential_disease from './pages/Potential_disease';
 
 function App() {
   return (
@@ -17,6 +18,8 @@ function App() {
         <Route path="/search" element={<SearchBar />} />  
         <Route path="/auth/login" element={<Login />} />
         <Route path="/auth/signup" element={<Signup />} />
+        <Route path="/disease" element={<Potential_disease />} />
+
 
       </Routes>
     </BrowserRouter>

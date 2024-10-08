@@ -1,7 +1,7 @@
 export default function Appbar(){
       return (<>
       
-      <div className="flex justify-between p-5 w-full fixed mt-3 shadow-sm ">
+      <div className="flex justify-between p-5 w-full fixed mt-3 shadow-sm pb-1 ">
             <div className="flex p-1 font-semibold text-xl ml-5">
                   Helthyfy
             </div>
