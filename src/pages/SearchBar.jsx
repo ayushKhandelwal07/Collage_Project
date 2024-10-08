@@ -3,10 +3,10 @@ import axios from "axios";
 import PropTypes from 'prop-types';
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import Appbar from "./Appbar";
+import Navbar from "@/component/Navbar";
 const genAI = new GoogleGenerativeAI("AIzaSyBCDbrnNZNDStjhSMhW4dqC57ySXlzvZTE");
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-
 
 
 // SearchBar Component
@@ -47,8 +47,7 @@ const SearchBar = ({ onSearch }) => {
   };
   
 
-  return (
-
+  return ( // lower search bar logic
     <div className="flex justify-start items-center bg-emerald-800 p-4 m-5 rounded-full absolute bottom-0 left-1/2 transform -translate-x-1/2">
       <div className="flex mr-4 p-1 h-10">
         <input
@@ -63,7 +62,7 @@ const SearchBar = ({ onSearch }) => {
 
       <div className="flex pr-10"> 
         <button
-          className="bg-white  p-1 rounded-full bg-emerald-800 hover:bg-red-500 hover:text-white"
+          className="bg-white p-1 rounded-full hover:bg-red-500 hover:text-white"
           onClick={handleVoiceSearch}
         >
           <svg
@@ -87,8 +86,8 @@ const SearchBar = ({ onSearch }) => {
         <button
           type="button"
           onClick={handleSearchClick}
-          className="focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-full text-sm px-5 py-2.5 me-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800"
-        >
+          className="focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-2 focus:ring-green-800  font-medium rounded-full text-sm px-5 py-2.5 me-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800"
+          >
           Search
         </button>
       </div>
@@ -101,7 +100,7 @@ const SearchBar = ({ onSearch }) => {
 // ChatApp Component
 const ChatApp = () => {
   const [messages, setMessages] = useState([]);
-
+   //gemini logic
   const handleSearch = async (term) => {
     // User message (appears on the right)
     const userMessage = { text: term, sender: "user" };
@@ -109,11 +108,13 @@ const ChatApp = () => {
 
     try {
       // Get diseases from the medical model API
-      const response_data = await axios.post("https://vinkas-ner-medical-model.hf.space/predict", {
+      const response_data = await axios.post("https://vinkas-en-biobert-model.hf.space/detect_symptoms", {
         text: term
       });
+      console.log(response_data.data.detected_symptoms)
+
       const data = response_data.data;
-      const diseases = data.response.potential_diseases[0];
+      const diseases = data.potential_diseases;``
       const probality = diseases.match(/-?\d+(\.\d+)?/g);
     
       console.log(diseases)
@@ -150,31 +151,38 @@ const ChatApp = () => {
 
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
-      <div className="w-4/6 bg-slate-100 shadow-md rounded-lg p-4">
-      
-        <div className="flex flex-col space-y-4 h-96  overflow-y-auto">
-          {messages.map((msg, index) => (
-            <div
-              key={index}
-              className={`flex ${
-                msg.sender === "user" ? "justify-end" : "justify-start" 
-              }`}
-            >
+    <div className="">
+      <Appbar />
+      <Navbar />
 
-              <div
-                className={`max-w-xl p-3 rounded-lg text-white ${
-                  msg.sender === "user"
-                    ? "bg-emerald-500 text-right"
-                    : "bg-emerald-500 text-left text-black"
-                }`}
-              >
-                {msg.text}
-              </div>
-            </div>
-          ))}
+      <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
+        <div className="w-5/6 h-4/5 bg-white-900 shadow-xl rounded-lg p-4">
+          <div className="flex flex-col space-y-4 h-96 overflow-y-auto">
+            {messages.map((msg, index) => {
+              const timestamp = new Date().toLocaleString(); // Get current date and time
+              return (
+                <div
+                  key={index}
+                  className={`flex ${
+                    msg.sender === "user" ? "justify-end" : "justify-start"
+                  }`}
+                >
+                  <div
+                    className={`max-w-xl p-2 rounded-lg text-black ${
+                      msg.sender === "user"
+                        ? "bg-blue-500 text-left"
+                        : "bg-blue-400 text-right text-black"
+                    }`}
+                  >
+                    <p>{msg.text}</p>
+                    <span className="text-xs text-blue-900">{timestamp}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <SearchBar onSearch={handleSearch} />
         </div>
-        <SearchBar onSearch={handleSearch} />
       </div>
     </div>
   );
