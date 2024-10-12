@@ -6,10 +6,10 @@ import Appbar from "./Appbar";
 import Navbar from "@/component/Navbar";
 import { useNavigate } from "react-router-dom";
 
-const genAI = new GoogleGenerativeAI("AIzaSyAl73CKsaZeZqeFbUEXiu93i9P4CKy_g-0");
+const genAI = new GoogleGenerativeAI("AIzaSyC9usuAzGnwJ_w3V0HxYfI6O3VsxOC0TPY");
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-const SearchBar = ({ onSearch }) => {
+export const  SearchBar = ({ onSearch }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isRecording, setIsRecording] = useState(false); // State to track recording status
 
@@ -51,10 +51,11 @@ const SearchBar = ({ onSearch }) => {
   };
 
   return (
-    <div className="flex justify-start items-center  bg-emerald-800 p-4 m-5 rounded-full absolute bottom-0 left-1/2 transform -translate-x-1/2">
-      <div className="flex mr-4 p-1 h-10">
+    <div className="flex justify-center">
+    <div className="flex justify-start items-center bg-emerald-800 p-4 m-5 rounded-full fixed bottom-0 content-center">
+      <div className="flex p-1 h-10">
         <input
-          className="rounded-full w-60 p-2 focus:outline-none bg-emerald-800 text-slate-100"
+          className="rounded-full w-60 p-2  focus:outline-none bg-emerald-800 text-slate-100"
           type="text"
           value={searchTerm}
           onChange={handleInputChange}
@@ -62,7 +63,7 @@ const SearchBar = ({ onSearch }) => {
         />
       </div>
 
-      <div className="flex pr-10"> 
+      <div className="flex"> 
         <button
           className={`p-1 rounded-full ${isRecording ? "bg-red-500" : "bg-white hover:bg-red-500 hover:text-white"}`} // Change button color based on recording status
           onClick={handleVoiceSearch}
@@ -94,6 +95,7 @@ const SearchBar = ({ onSearch }) => {
         </button>
       </div>
 
+    </div>
     </div>
   );
 };

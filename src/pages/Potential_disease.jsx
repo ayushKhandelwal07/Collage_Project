@@ -1,8 +1,28 @@
 import { useEffect, useState } from 'react';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
+import { HarmBlockThreshold, HarmCategory } from "@google/generative-ai";
+
+const safetySettings = [
+  {
+    category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+    threshold: HarmBlockThreshold.BLOCK_HIGH_ONLY,
+  },
+  {
+    category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+    threshold: HarmBlockThreshold.BLOCK_HIGH_ONLY,
+  },
+ { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+  threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH},
+
+  {category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+  threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,}
+];
+
+
+
 const genAI = new GoogleGenerativeAI("AIzaSyAl73CKsaZeZqeFbUEXiu93i9P4CKy_g-0");
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash", safetySettings: safetySettings });
 
 function Chat() {
   const [diseases, setDiseases] = useState({});
@@ -61,7 +81,7 @@ function Chat() {
 
   return (
     <div className="p-6">
-      <h2 className="text-black text-3xl pl-14 font-bold mb-4">Potential Diseases:</h2>
+      <h2 className="flextext-black text-3xl pl-14 font-bold mb-4">Potential Diseases :</h2>
       
       {/* Buttons for each disease */}
       {Object.entries(diseases).length > 0 ? (

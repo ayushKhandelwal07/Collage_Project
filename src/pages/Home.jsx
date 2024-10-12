@@ -5,14 +5,14 @@ function Home() {
       const navigate = useNavigate();
 
       const homeRedirect = () => {
-            navigate('/language')
+            navigate('/auth/signup')
       }
 
       return (
       <div >
 
             <Navbar />
-            <div className="flex justify-center content-center mt-24">
+            <div className="flex justify-center content-center mt-36">
                   <div className='flex text-5xl font-bold text-center'>
                         Find Relief from <br /> Your all heath concerns
                   </div>
